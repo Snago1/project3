@@ -8,13 +8,45 @@ function App() {
   const [weatherData, setWeatherData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [coords, setCoords] = useState(null);
 
   useEffect(() => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        console.log(position);
+        const { latitude, longitude } = position.coords;
+        setCoords({ latitude, longitude });
+      },
+      (err) => {
+        console.error("Geolocation error", err.message);
+        setError("Failed to get your location");
+      }
+    );
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+    console.log(signal);
+    if (!city.trim() && !coords) {
+      setWeatherData(null);
+      setError(null);
+      return;
+    }
     async function getData() {
       setLoading(true);
       try {
+        const querry = city.trim()
+          ? city
+          : `${coords.latitude}, ${coords.longitude}`;
+
         const res = await fetch(
-          `http://api.weatherapi.com/v1/current.json?key=${KEY}&q=${city}`
+          `http://api.weatherapi.com/v1/current.json?key=${KEY}&q=${querry}`,
+          { signal }
         );
         const data = await res.json();
         if (data.error) {
@@ -31,12 +63,16 @@ function App() {
         setLoading(false);
       }
     }
+
     getData();
-  }, [city]);
-  console.log(weatherData);
+    return () => {
+      controller.abort();
+    };
+  }, [city, coords]);
 
   return (
     <div className="app">
+      <TimerComponent />
       <div className="widget-container">
         <div className="weather-card-container">
           <h1 className="app-title">Weather Widget</h1>
@@ -82,5 +118,40 @@ function App() {
     </div>
   );
 }
+function TimerComponent() {
+  const [count, setCount] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
 
+  useEffect(() => {
+    let timer;
+
+    if (isRunning) {
+      // Устанавливаем таймер, если он включён
+      timer = setInterval(() => {
+        console.log("Timer running:", count);
+        setCount((prev) => prev + 1);
+      }, 1000);
+    }
+
+    // Функция очистки таймера
+    return () => {
+      if (timer) {
+        console.log("Cleaning up the timer");
+        clearInterval(timer);
+      }
+    };
+  }, [isRunning]); // Таймер обновляется при изменении isRunning
+
+  return (
+    <div>
+      <h1>Timer: {count}</h1>
+      <button onClick={() => setIsRunning((prev) => !prev)}>
+        {isRunning ? "Stop Timer" : "Start Timer"}
+      </button>
+      <button onClick={() => setCount(0)} disabled={isRunning}>
+        Reset Timer
+      </button>
+    </div>
+  );
+}
 export default App;
