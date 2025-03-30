@@ -3,3 +3,7 @@
   flex-direction: column;
   gap: 30px;
 }
+.invalid {
+  border: 1px solid red;
+  background: rgb(74, 7, 7);
+}
