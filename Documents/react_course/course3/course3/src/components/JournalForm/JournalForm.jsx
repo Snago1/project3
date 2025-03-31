@@ -1,7 +1,7 @@
 import Button from "../Button/Button";
 import styles from "./JournalForm.module.css";
 import { useState } from "react";
-import cn from "classnames";
+// import cn from "classnames";
 
 const JournalForm = ({ onSubmit }) => {
   const [formValidState, setFormValidState] = useState({
@@ -41,7 +41,7 @@ const JournalForm = ({ onSubmit }) => {
   return (
     <form className={styles["journal-form"]} onSubmit={addJournalItem}>
       <input
-        type="title"
+        type="text"
         name="title"
         className={`${styles["input"]} ${
           formValidState.title ? "" : styles["invalid"]
